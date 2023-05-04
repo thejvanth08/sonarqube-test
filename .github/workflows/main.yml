@@ -1,29 +1,34 @@
+name: XML to JSON Conversion and SonarQube Analysis
+
 on:
-  # Trigger analysis when pushing to your main branches, and when creating a pull request.
   push:
     branches:
       - main
-      - master
-      - develop
-      - 'releases/**'
   pull_request:
-      types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened]
 
-name: Main Workflow
 jobs:
-  sonarqube:
+  xml-to-json-and-sonarqube:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        # Disabling shallow clone is recommended for improving relevancy of reporting
-        fetch-depth: 0
-    - name: SonarQube Scan
-      uses: sonarsource/sonarqube-scan-action@master
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        scanner-properties: |
+      - uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: '16.x'
+      - name: Install dependencies
+        run: npm install
+      - name: Convert XML to JSON
+        run: npm run convert-xml-to-json
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v1
+        with:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          project-key: my-project-key
+          project-name: My Project Name
+          organization: my-organization
+          scanner-properties: |
             sonar.sources=.
             sonar.exclusions=node_modules/**/*,test/**/*
             sonar.javascript.lcov.reportPaths=coverage/lcov.info
